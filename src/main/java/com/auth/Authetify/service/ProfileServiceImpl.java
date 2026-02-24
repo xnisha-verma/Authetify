@@ -1,0 +1,53 @@
+package com.auth.Authetify.service;
+
+import com.auth.Authetify.entity.UserEntity;
+import com.auth.Authetify.entity.UserRepository;
+import com.auth.Authetify.io.ProfileRequest;
+import com.auth.Authetify.io.ProfileResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.UUID;
+
+@Service
+public class ProfileServiceImpl implements ProfileService{
+    private final UserRepository userRepository;
+
+    public ProfileServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+    @Override
+    public ProfileResponse createProfile(ProfileRequest request) {
+        UserEntity newProfile = convertToUserEntity(request);
+        if (!userRepository.existsByEmail((request.getEmail()))) {
+            newProfile = userRepository.save(newProfile);
+            return convertToProfileResponse(newProfile);
+        }
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+    }
+
+    private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
+       return ProfileResponse.builder()
+                .name(newProfile.getName())
+                .email(newProfile.getName())
+                .userId(newProfile.getUserId())
+                .isAccountVerified(newProfile.getIsAccountVerified())
+                .build();
+    }
+
+    private UserEntity convertToUserEntity(ProfileRequest request) {
+        return UserEntity.builder()
+                .email(request.getEmail())
+                .userId(UUID.randomUUID().toString())
+                .name(request.getName())
+                .password(request.getPassword())
+                .isAccountVerified(false)
+                .resetOtpExpireAt(0L)
+                .verifyOtp(null)
+                .verifyOtpExpireAt(0L)
+                .resetOtp(null)
+                .build();
+
+    }
+}
