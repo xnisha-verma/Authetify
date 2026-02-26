@@ -4,19 +4,19 @@ import com.auth.Authetify.entity.UserEntity;
 import com.auth.Authetify.entity.UserRepository;
 import com.auth.Authetify.io.ProfileRequest;
 import com.auth.Authetify.io.ProfileResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ProfileServiceImpl implements ProfileService{
     private final UserRepository userRepository;
-
-    public ProfileServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final PasswordEncoder passwordEncoder;
     @Override
     public ProfileResponse createProfile(ProfileRequest request) {
         UserEntity newProfile = convertToUserEntity(request);
@@ -30,7 +30,7 @@ public class ProfileServiceImpl implements ProfileService{
     private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
        return ProfileResponse.builder()
                 .name(newProfile.getName())
-                .email(newProfile.getName())
+                .email(newProfile.getEmail())
                 .userId(newProfile.getUserId())
                 .isAccountVerified(newProfile.getIsAccountVerified())
                 .build();
@@ -41,7 +41,7 @@ public class ProfileServiceImpl implements ProfileService{
                 .email(request.getEmail())
                 .userId(UUID.randomUUID().toString())
                 .name(request.getName())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword() ))
                 .isAccountVerified(false)
                 .resetOtpExpireAt(0L)
                 .verifyOtp(null)
